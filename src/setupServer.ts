@@ -3,6 +3,7 @@ import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import hpp from 'hpp';
+import compression from 'compression';
 import cookieSession  from 'cookie-session';
 import HTTP_STATUS from 'http-status-codes';
 import 'express-async-errors';
@@ -46,6 +47,17 @@ export class ChattyServer {
   }
 
   private standardMiddleware(app: Application): void {
+    app.use(compression());
+    // set the limit of the request body to 50mb
+    app.use(json({
+      limit: '50mb',
+    }));
+    
+    app.use(urlencoded({
+      limit: '50mb',
+      extended: true,
+    }));
+
   }
 
   private routeMiddleware(app: Application): void {
