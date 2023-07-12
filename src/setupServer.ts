@@ -9,6 +9,8 @@ import HTTP_STATUS from 'http-status-codes';
 import 'express-async-errors';
 
 
+const SERVER_PORT = 5000;
+
 export class ChattyServer {
   private app: Application;
 
@@ -52,7 +54,7 @@ export class ChattyServer {
     app.use(json({
       limit: '50mb',
     }));
-    
+
     app.use(urlencoded({
       limit: '50mb',
       extended: true,
@@ -66,13 +68,22 @@ export class ChattyServer {
   private globalErrorHandler(app: Application): void {
   }
 
-  private startServer(app: Application): void {
+  private async startServer(app: Application): Promise<void> {
+    try {
+      const httpServer = http.createServer(app);
+      this.startHttpServer(httpServer);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   private createSocketIO(httpServer: http.Server): void {
   }
 
   private startHttpServer(httpServer: http.Server): void {
+    httpServer.listen(process.env.PORT || SERVER_PORT, () => {
+      console.log(`Server is listening on port ${process.env.PORT || SERVER_PORT}`);
+    });
   }
 
 
