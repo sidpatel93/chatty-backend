@@ -1,4 +1,4 @@
-import {Application, json, urlencoded, Response, Request, Next} from 'express';
+import {Application, json, urlencoded, Response, Request} from 'express';
 import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -7,6 +7,7 @@ import compression from 'compression';
 import cookieSession  from 'cookie-session';
 import HTTP_STATUS from 'http-status-codes';
 import 'express-async-errors';
+import {config} from './config';
 
 
 const SERVER_PORT = 5000;
@@ -31,17 +32,17 @@ export class ChattyServer {
     app.use(
       cookieSession({
         name: 'session',
-        keys: ['test1', 'test2'],
+        keys: [config.SESSION_KEY_1, config.SESSION_KEY_2],
         // set the max age to 7 days
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: false,
+        secure: config.NODE_ENV === 'development' ? false : true,
       })
     );
 
     app.use(hpp());
     app.use(helmet());
     app.use(cors({
-      origin: '*',
+      origin: config.CLIENT_URL,
       credentials: true,
       optionsSuccessStatus: HTTP_STATUS.OK,
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
