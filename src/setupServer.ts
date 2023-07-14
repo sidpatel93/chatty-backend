@@ -8,6 +8,9 @@ import cookieSession  from 'cookie-session';
 import HTTP_STATUS from 'http-status-codes';
 import 'express-async-errors';
 import {config} from './config';
+import {Server} from 'socket.io';
+import { createClient } from 'redis';
+import { createAdapter } from '@socket.io/redis-adapter';
 
 
 const SERVER_PORT = 8080;
@@ -45,7 +48,7 @@ export class ChattyServer {
       origin: config.CLIENT_URL,
       credentials: true,
       optionsSuccessStatus: HTTP_STATUS.OK,
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     }));
   }
 
@@ -72,16 +75,35 @@ export class ChattyServer {
   private async startServer(app: Application): Promise<void> {
     try {
       const httpServer = http.createServer(app);
+      const io = await this.createSocketIO(httpServer);
+      // start http server and socket.io connections
       this.startHttpServer(httpServer);
+      this.socketIOConnections(io);
+      
     } catch (err) {
       console.error(err);
     }
   }
 
-  private createSocketIO(httpServer: http.Server): void {
+  private async createSocketIO(httpServer: http.Server): Promise<Server> {
+    const io: Server = new Server(httpServer, {
+      cors: {
+        origin: config.CLIENT_URL,
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      }
+    });
+    const pubClient = createClient({url: config.REDIS_HOST});
+    const subClient = pubClient.duplicate();
+    await Promise.all([pubClient.connect(), subClient.connect()]);
+    io.adapter(createAdapter(pubClient, subClient));
+    return io;
+  }
+
+  private socketIOConnections(io: Server): void {
   }
 
   private startHttpServer(httpServer: http.Server): void {
+    console.log(`server started with process id ${process.pid}`);
     httpServer.listen(process.env.PORT || SERVER_PORT, () => {
       console.log(`Server is listening on port ${process.env.PORT || SERVER_PORT}`);
     });
