@@ -1,4 +1,4 @@
-import {Application, json, urlencoded, Response, Request} from 'express';
+import {Application, json, urlencoded, Response, Request, NextFunction} from 'express';
 import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -11,7 +11,9 @@ import {config} from './config';
 import {Server} from 'socket.io';
 import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
-
+import routes from './routes';
+import { CustomError, IErrorResponse } from './shared/globals/helpers/error-handler';
+ 
 
 const SERVER_PORT = 8080;
 
@@ -67,9 +69,23 @@ export class ChattyServer {
   }
 
   private routeMiddleware(app: Application): void {
+    routes(app);
   }
 
   private globalErrorHandler(app: Application): void {
+    app.all('*', (req: Request, res: Response) => {
+      res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Route not found',
+      });
+    });
+
+    app.use((err: IErrorResponse, req: Request, res: Response, next: NextFunction) => {
+      console.log(err);
+      if (err instanceof CustomError) {
+        return res.status(err.statusCode).json(err.serializeErrors());
+      }
+    })
   }
 
   private async startServer(app: Application): Promise<void> {
