@@ -10,7 +10,7 @@ import 'express-async-errors';
 import {config} from './config';
 
 
-const SERVER_PORT = 5000;
+const SERVER_PORT = 8080;
 
 export class ChattyServer {
   private app: Application;
