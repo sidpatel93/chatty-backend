@@ -13,9 +13,11 @@ import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
 import routes from './routes';
 import { CustomError, IErrorResponse } from './shared/globals/helpers/error-handler';
+import Logger from 'bunyan';
  
 
 const SERVER_PORT = 8080;
+const log: Logger = config.createLogger('server');
 
 export class ChattyServer {
   private app: Application;
@@ -81,7 +83,7 @@ export class ChattyServer {
     });
 
     app.use((err: IErrorResponse, req: Request, res: Response, next: NextFunction) => {
-      console.log(err);
+      log.error(err);
       if (err instanceof CustomError) {
         return res.status(err.statusCode).json(err.serializeErrors());
       }
@@ -97,7 +99,7 @@ export class ChattyServer {
       this.socketIOConnections(io);
       
     } catch (err) {
-      console.error(err);
+      log.error(err);
     }
   }
 
@@ -119,9 +121,9 @@ export class ChattyServer {
   }
 
   private startHttpServer(httpServer: http.Server): void {
-    console.log(`server started with process id ${process.pid}`);
+    log.info(`server started with process id ${process.pid}`);
     httpServer.listen(process.env.PORT || SERVER_PORT, () => {
-      console.log(`Server is listening on port ${process.env.PORT || SERVER_PORT}`);
+      log.info(`Server is listening on port ${process.env.PORT || SERVER_PORT}`);
     });
   }
 

@@ -1,11 +1,14 @@
 import mongoose from "mongoose";
 import {config} from "./config";
+import Logger from "bunyan";
+
+const log: Logger = config.createLogger('database');
 export default () => {
   const connect = () => {
     mongoose.connect(config.DATABASE_URL).then(() => {
-      console.log('connected to mongodb');
+      log.info('Connected to mongodb !!!!!!!!!!!');
     }).catch((error) => {
-      console.log('error connecting to mongodb', error);
+      log.error(error);
       return process.exit(1);
     });
   };
